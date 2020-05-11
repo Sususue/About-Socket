@@ -1,12 +1,14 @@
 #include<WinSock2.h>
 #include<iostream>
 #include<string.h>
+#include <process.h>
 
 #pragma comment(lib, "ws2_32.lib")//添加动态链接库？
 
 #define THELEN 10
 #define MYPORT 2020
 #define BUF_SIZE 255
+
 using namespace std;
 /*
 1.建立套接字
@@ -76,7 +78,70 @@ SOCKET toSock(const int port, const char* transport, int theLength) {
 
 }
 
+/*接收和返回信息*/
+void receiveAndSend(SOCKET* newSock) {
+	char recvBuf[BUF_SIZE], sendBuf[BUF_SIZE];//缓存信息
 
+	int ret;
+	/*5.反复接受用户请求，构造并发送响应（注意每次都要创建新的套接字）*/
+	SOCKET sock = *(SOCKET*)newSock;
+	while (true)
+	{
+		ZeroMemory(recvBuf, BUF_SIZE);//清空缓存
+		ZeroMemory(sendBuf, BUF_SIZE);
+		//接收客户端数据
+		ret = recv(sock, recvBuf, BUF_SIZE, 0);
+
+		if (ret == SOCKET_ERROR)
+		{
+			cout << "fail to recv!" << endl;
+			break;
+		}
+		if (recvBuf[0] == '0' && strlen(recvBuf) == 1) {//若接收到一个0，退出循环，关闭连接
+			cout << "finished!" << endl;
+			closesocket(sock); //关闭套接字
+			WSACleanup();
+			exit(0);
+		}
+		cout << endl << "客户端发送了信息: " << recvBuf << endl;
+
+		strcpy_s(sendBuf, "Server:");
+		strcat_s(sendBuf, recvBuf);
+		cout << "向客户端返回信息: " << sendBuf << endl;
+		cout << "------------------------------" << endl;
+
+		send(sock, sendBuf, strlen(sendBuf), 0);//将修改后的信息发送给客户端
+
+
+	}
+}
+
+/*发送信息*/
+void sendM(SOCKET* newSock) {
+	char sendBuf[BUF_SIZE];
+	int ret;
+	SOCKET sock = *(SOCKET*)newSock;
+	cout << "若要退出请输入单个0" << endl;
+	cout << "-------------------------------------" << endl;
+	while (true) {
+		ZeroMemory(sendBuf, BUF_SIZE);
+		cout << "请输入要向客户端发送的信息：";
+		cin >> sendBuf;
+		cout << "------------------------------" << endl;
+		ret = send(sock, sendBuf, strlen(sendBuf), 0);
+		if (ret == SOCKET_ERROR) {
+			cout << "fail to send!" << endl;
+		}
+		if (strcmp(sendBuf, "0") == 0) {//当输入为0时，退出
+			cout << "------------------------------" << endl;
+			cout << "Close!" << endl;
+			closesocket(sock); //关闭套接字
+			WSACleanup();
+			exit(0);
+		}
+	}
+
+}
 
 int main() {
 	struct sockaddr_in clientSin;
@@ -101,39 +166,12 @@ int main() {
 		cout << "accept!" << endl;
 		char recvBuf[BUF_SIZE], sendBuf[BUF_SIZE];//缓存信息
 
-		int ret;
 		/*5.反复接受用户请求，构造并发送响应（注意每次都要创建新的套接字）*/
-		while (true)
-		{
-			ZeroMemory(recvBuf, BUF_SIZE);//清空缓存
-			ZeroMemory(sendBuf, BUF_SIZE);
-			//接收客户端数据
-			ret = recv(newSock, recvBuf, BUF_SIZE, 0);
+		//创建两个子线程
+		_beginthread((void(*)(void*))receiveAndSend, 0, &newSock);
+		_beginthread((void(*)(void*))sendM, 0, &newSock);
 
-			if (ret == SOCKET_ERROR)
-			{
-				cout << "fail to recv!" << endl;
-				closesocket(mySock);	//关闭套接字
-				closesocket(newSock);	//关闭套接字		
-				WSACleanup();			//释放套接字资源;
-				return 1;
-			}
-			if (recvBuf[0] == '0' && strlen(recvBuf) == 1) {//若接收到一个0，退出循环，关闭连接
-				cout << "finished!" << endl;
-				break;
-			}
-			cout << "客户端发送了信息: " << recvBuf << endl;
-
-			strcpy_s(sendBuf, "Server:");
-			strcat_s(sendBuf, recvBuf);
-			cout << "向客户端返回信息: " << sendBuf << endl;
-			cout << "------------------------------" << endl;
-
-			send(newSock, sendBuf, strlen(sendBuf), 0);//将修改后的信息发送给客户端
-
-
-		}
-		/*6.完成后关闭连接，返回3或者结束*/
+		Sleep(INFINITE);	//使其无限期休眠
 
 	}
 
