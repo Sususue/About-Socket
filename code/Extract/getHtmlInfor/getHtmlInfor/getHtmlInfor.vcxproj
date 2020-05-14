@@ -123,13 +123,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="cJSON.c" />
     <ClCompile Include="getInfor.cpp" />
     <ClCompile Include="htmlGet.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="webTraversal.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="cJSON.h" />
     <ClInclude Include="getInfor.h" />
     <ClInclude Include="htmlGet.h" />
+    <ClInclude Include="webTraversal.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

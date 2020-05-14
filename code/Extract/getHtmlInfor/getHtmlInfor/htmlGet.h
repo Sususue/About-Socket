@@ -46,5 +46,8 @@ recvAtr:从网页接收到的字符
 */
 void downLoad(const std::string& recvStr);
 
+/*发送POST请求*/
+bool sendRequestPOST(SOCKET sock, const std::string& host, const std::string& resource, const std::string& cookie, const int page, const int schoolId);
+
 
 #endif 

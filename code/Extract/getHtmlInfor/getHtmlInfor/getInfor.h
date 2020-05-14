@@ -4,28 +4,47 @@
 
 #include <string>
 
+typedef struct classInfor {
+	std::string schoolName;/*学校名称*/
+	std::string name;/*课程名称*/
+	std::string duration;/*开课时间*/
+	int enrollCount;/*参加人数*/
+	std::string classOverview;/*课程概述*/
+	std::string aim;/*授课目标*/
+	std::string classOutline;/*课程大纲*/
+	std::string references;/*参考资料*/
+}ClassInfor;
+
 /*获取学校名称*/
-void getSchoolName(const std::string& recvStr);
+void getSchoolName(const std::string& recvStr, ClassInfor* ACourse);
 
 /*获取课程名称*/
-void getCourseName(const std::string& recvStr);
+void getCourseName(const std::string& recvStr, ClassInfor* ACourse);
 
 /*获取开课时间*/
-void getCourseTime(const std::string& recvStr);
+void getCourseTime(const std::string& recvStr, ClassInfor* ACourse);
 
 /*获取已参加人数*/
-void getStudentNum(const std::string& recvStr);
+void getStudentNum(const std::string& recvStr, ClassInfor* ACourse);
 
 /*获取课程概述*/
-void getCourseDescribe(const std::string& recvStr);
+void getCourseDescribe(const std::string& recvStr, ClassInfor* ACourse);
 
 /*获取授课目标*/
-void getCourseAim(const std::string& recvStr);
+void getCourseAim(const std::string& recvStr, ClassInfor* ACourse);
 
 /*获取课程大纲*/
-void getContent(const std::string& recvStr);
+void getContent(const std::string& recvStr, ClassInfor* ACourse);
 
 /*获取参考资料*/
-void getReference(const std::string& recvStr);
+void getReference(const std::string& recvStr, ClassInfor* ACourse);
+
+/*初始化课程信息结构*/
+void initClassInfor(ClassInfor* ACourse);
+
+/*将课程信息写入文件*/
+void writeInfor(ClassInfor* ACourse);
+
+
 #endif
 

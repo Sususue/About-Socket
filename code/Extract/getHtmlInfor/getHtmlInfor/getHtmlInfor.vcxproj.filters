@@ -24,12 +24,24 @@
     <ClCompile Include="getInfor.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="cJSON.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="webTraversal.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="getInfor.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="htmlGet.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="cJSON.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="webTraversal.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

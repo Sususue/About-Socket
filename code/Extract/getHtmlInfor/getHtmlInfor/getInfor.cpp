@@ -2,11 +2,12 @@
 #include "getInfor.h"
 #include <regex>
 #include <iostream>
+#include "cJSON.h"
 
 using namespace std;
 
 /*获取学校名称*/
-void getSchoolName(const std::string& recvStr) {
+void getSchoolName(const std::string& recvStr, ClassInfor* ACourse) {
 	int index = recvStr.find("<title>");
 	//cout << recvStr[index] << endl;
 	string str = "\0";
@@ -18,8 +19,12 @@ void getSchoolName(const std::string& recvStr) {
 		str = recvStr.substr(index, index1 - index);
 	}
 
+	if (str[0] != '\0') {
+		ACourse->schoolName = str;
+	}
+
 	FILE* fp = NULL;
-	fp = fopen("./学校名称.txt", "wb");
+	fp = fopen("./信息验证/学校名称.txt", "wb");
 	if (fp) {
 		fwrite(str.c_str(), sizeof(char), str.length(), fp);
 		fclose(fp);
@@ -31,7 +36,7 @@ void getSchoolName(const std::string& recvStr) {
 }
 
 /*获取课程名称*/
-void getCourseName(const string& recvStr) {
+void getCourseName(const string& recvStr, ClassInfor* ACourse) {
 	/*auto curIter = recvStr.begin();
 	auto endIter = recvStr.end();
 	smatch res;*/
@@ -51,8 +56,12 @@ void getCourseName(const string& recvStr) {
 		str = recvStr.substr(index, index1 - index);
 	}
 
+	if (str[0] != '\0') {
+		ACourse->name = str;
+	}
+
 	FILE* fp = NULL;
-	fp = fopen("./课程名字.txt", "wb");
+	fp = fopen("./信息验证/课程名字.txt", "wb");
 	if (fp) {
 		fwrite(str.c_str(), sizeof(char), str.length(), fp);
 		fclose(fp);
@@ -65,7 +74,7 @@ void getCourseName(const string& recvStr) {
 }
 
 /*获取开课时间*/
-void getCourseTime(const string& recvStr) {
+void getCourseTime(const string& recvStr, ClassInfor* ACourse) {
 	//找到大概位置
 	int index = recvStr.find("window.termInfoList");
 	string str = "\0";
@@ -78,8 +87,13 @@ void getCourseTime(const string& recvStr) {
 		str = recvStr.substr(index, index1 - index);
 	}
 
+	if (str[0] != '\0') {
+		//strcpy(ACourse->duration, str.c_str());
+		ACourse->duration = str;
+	}
+
 	FILE* fp = NULL;
-	fp = fopen("./开课时间.txt", "wb");
+	fp = fopen("./信息验证/开课时间.txt", "wb");
 	if (fp) {
 		fwrite(str.c_str(), sizeof(char), str.length(), fp);
 		fclose(fp);
@@ -91,7 +105,7 @@ void getCourseTime(const string& recvStr) {
 
 }
 /*获取已参加人数*/
-void getStudentNum(const string& recvStr) {
+void getStudentNum(const string& recvStr, ClassInfor* ACourse) {
 	int index = recvStr.find("enrollCount : \"");
 	string str = "\0";
 	if (index != -1) {
@@ -101,8 +115,12 @@ void getStudentNum(const string& recvStr) {
 		str = recvStr.substr(index, index1 - index);
 	}
 
+	if (str[0] != '\0') {
+		ACourse->enrollCount = atoi(str.c_str());
+	}
+
 	FILE* fp = NULL;
-	fp = fopen("./已参加人数.txt", "wb");
+	fp = fopen("./信息验证/已参加人数.txt", "wb");
 	if (fp) {
 		fwrite(str.c_str(), sizeof(char), str.length(), fp);
 		fclose(fp);
@@ -114,7 +132,7 @@ void getStudentNum(const string& recvStr) {
 
 }
 /*获取课程概述*/
-void getCourseDescribe(const string& recvStr) {
+void getCourseDescribe(const string& recvStr, ClassInfor* ACourse) {
 	//找到课程概述的大概位置
 	int index = recvStr.find("<span class=\"category-title_icon f-ib f-vam u-icon-categories\"></span>");
 	//int index = recvStr.find("授课目标");
@@ -134,8 +152,13 @@ void getCourseDescribe(const string& recvStr) {
 
 	}
 
+	if (str[0] != '\0') {
+		ACourse->classOverview = str;
+		ACourse->classOverview = regex_replace(ACourse->classOverview, regex("[\n]"), " ");//将换行换成空格
+	}
+
 	FILE* fp = NULL;
-	fp = fopen("./课程概述.txt", "wb");
+	fp = fopen("./信息验证/课程概述.txt", "wb");
 	if (fp) {
 		fwrite(str.c_str(), sizeof(char), str.length(), fp);
 		fclose(fp);
@@ -148,7 +171,7 @@ void getCourseDescribe(const string& recvStr) {
 }
 
 /*获取授课目标*/
-void getCourseAim(const string& recvStr) {
+void getCourseAim(const string& recvStr, ClassInfor* ACourse) {
 	char sTemp[10] = "\0";
 	FILE* fp1 = NULL;
 	fp1 = fopen("./classAim.txt", "rb");
@@ -161,7 +184,7 @@ void getCourseAim(const string& recvStr) {
 	else {
 		cout << "fail wo open the file" << endl;
 	}
-	//找到课程概述的大概位置
+	//找到授课目标的大概位置
 	int index = recvStr.find(sTemp);//
 	//int index = recvStr.find("授课目标");//编码不同，无法找到
 	string str = "\0";
@@ -177,8 +200,14 @@ void getCourseAim(const string& recvStr) {
 		str = regex_replace(str, regex("&nbsp;"), " ");//换成空格
 	}
 
+	if (str[0] != '\0') {
+		//strcpy(ACourse->aim, str.c_str());
+		ACourse->aim = str;
+		ACourse->aim = regex_replace(ACourse->aim, regex("[\n]"), " ");//将换行换成空格
+	}
+
 	FILE* fp = NULL;
-	fp = fopen("./授课目标.txt", "wb");
+	fp = fopen("./信息验证/授课目标.txt", "wb");
 	if (fp) {
 		fwrite(str.c_str(), sizeof(char), str.length(), fp);
 		fclose(fp);
@@ -190,7 +219,7 @@ void getCourseAim(const string& recvStr) {
 }
 
 /*获取课程大纲*/
-void getContent(const string& recvStr) {
+void getContent(const string& recvStr, ClassInfor* ACourse) {
 	//为啥不同课程的大纲写法格式还不一样……
 	/*  有的写在outLineStructureDtos:后面；有的写在outLineDto:后面
 		大概思路：先看outLineStructureDtos:后是否有有效内容，
@@ -234,11 +263,16 @@ void getContent(const string& recvStr) {
 			str = regex_replace(str, regex("[:;\",]"), "");
 
 		}
+	}
 
+	if (str[0] != '\0') {
+		//strcpy(ACourse->classOutline, str.c_str());
+		ACourse->classOutline = str;
+		ACourse->classOutline = regex_replace(ACourse->classOutline, regex("[\n]"), " ");//将换行换成空格
 	}
 
 	FILE* fp = NULL;
-	fp = fopen("./课程大纲.txt", "wb");
+	fp = fopen("./信息验证/课程大纲.txt", "wb");
 	if (fp) {
 		fwrite(str.c_str(), sizeof(char), str.length(), fp);
 		fclose(fp);
@@ -251,7 +285,7 @@ void getContent(const string& recvStr) {
 
 
 /*获取参考资料*/
-void getReference(const string& recvStr) {
+void getReference(const string& recvStr, ClassInfor* ACourse) {
 	//找到参考资料的大概位置
 	int index = recvStr.find("<span class=\"category-title_icon f-ib f-vam f-18 u-icon-stacks\">");
 	//int index = recvStr.find("授课目标");
@@ -269,8 +303,13 @@ void getReference(const string& recvStr) {
 
 	}
 
+	if (str[0] != '\0') {
+		ACourse->references = str;
+		ACourse->references = regex_replace(ACourse->references, regex("[\n]"), " ");//将换行换成空格
+	}
+
 	FILE* fp = NULL;
-	fp = fopen("./参考资料.txt", "wb");
+	fp = fopen("./信息验证/参考资料.txt", "wb");
 	if (fp) {
 		fwrite(str.c_str(), sizeof(char), str.length(), fp);
 		fclose(fp);
@@ -279,4 +318,52 @@ void getReference(const string& recvStr) {
 	else {
 		cout << "fail to open the file" << endl;
 	}
+}
+
+/*初始化课程信息结构*/
+void initClassInfor(ClassInfor* ACourse) {
+	/*ACourse->schoolName = NULL;
+	ACourse->name = NULL;
+	ACourse->duration = NULL;
+	ACourse->enrollCount = 0;
+	ACourse->classOverview = NULL;
+	ACourse->classOutline = NULL;
+	ACourse->aim = NULL;
+	ACourse->references = NULL;*/
+	ACourse->schoolName = "";
+	ACourse->name = "";
+	ACourse->duration = "";
+	ACourse->enrollCount = 0;
+	ACourse->classOverview = "";
+	ACourse->classOutline = "";
+	ACourse->aim = "";
+	ACourse->references = "";
+}
+
+/*将课程信息写入文件,借助cjson*/
+void writeInfor(ClassInfor* ACourse) {
+	cJSON* root;
+	root = cJSON_CreateObject();//创建一个对象
+	cJSON_AddItemToObject(root, "schoolName", cJSON_CreateString(ACourse->schoolName.c_str()));
+	cJSON_AddItemToObject(root, "name", cJSON_CreateString(ACourse->name.c_str()));
+	cJSON_AddItemToObject(root, "duration", cJSON_CreateString(ACourse->duration.c_str()));
+	cJSON_AddItemToObject(root, "enrollCount", cJSON_CreateNumber(ACourse->enrollCount));
+	cJSON_AddItemToObject(root, "classOverview", cJSON_CreateString(ACourse->classOverview.c_str()));
+	cJSON_AddItemToObject(root, "classOutline", cJSON_CreateString(ACourse->classOutline.c_str()));
+	cJSON_AddItemToObject(root, "aim", cJSON_CreateString(ACourse->aim.c_str()));
+	cJSON_AddItemToObject(root, "references", cJSON_CreateString(ACourse->references.c_str()));
+
+	cout << cJSON_Print(root) << endl;
+	FILE* fp = NULL;
+	fp = fopen("./classInfor.txt", "wb");
+	if (fp) {
+		fwrite(cJSON_Print(root), sizeof(char), strlen(cJSON_Print(root)), fp);
+		fclose(fp);
+		fp = NULL;
+	}
+	else {
+		cout << "fail wo open the file" << endl;
+	}
+	cJSON_Delete(root);
+
 }
