@@ -156,11 +156,14 @@ string recvRequest(SOCKET sock, const string& url) {
 }
 
 
+
 /*Ð´ÈëÎÄ¼þ*/
-void downLoad(const string& recvStr) {
+void downLoad(const string& recvStr, const string& filename) {
 	FILE* fp = NULL;
 	//fp = fopen("./try.html", "wb");
-	fp = fopen("./request.txt", "ab");
+	char fname[30];
+	sprintf(fname, "./%s", filename.c_str());
+	fp = fopen(fname, "ab");
 	if (fp) {
 		fwrite(recvStr.c_str(), sizeof(char), recvStr.length(), fp);
 		fclose(fp);

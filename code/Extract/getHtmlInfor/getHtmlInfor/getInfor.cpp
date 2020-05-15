@@ -14,9 +14,12 @@ void getSchoolName(const std::string& recvStr, ClassInfor* ACourse) {
 	if (index != -1) {
 		index = recvStr.find("_", index);
 		index += strlen("_");
-		int index1 = recvStr.find("_", index);
-		//<title>后面一行的两个_之间为学校名称
-		str = recvStr.substr(index, index1 - index);
+		if (index != -1) {
+			int index1 = recvStr.find("_", index);
+			//<title>后面一行的两个_之间为学校名称
+			str = recvStr.substr(index, index1 - index);
+		}
+		
 	}
 
 	if (str[0] != '\0') {
@@ -341,7 +344,7 @@ void initClassInfor(ClassInfor* ACourse) {
 }
 
 /*将课程信息写入文件,借助cjson*/
-void writeInfor(ClassInfor* ACourse) {
+void writeInfor(ClassInfor* ACourse, char* filename) {
 	cJSON* root;
 	root = cJSON_CreateObject();//创建一个对象
 	cJSON_AddItemToObject(root, "schoolName", cJSON_CreateString(ACourse->schoolName.c_str()));
@@ -355,7 +358,7 @@ void writeInfor(ClassInfor* ACourse) {
 
 	cout << cJSON_Print(root) << endl;
 	FILE* fp = NULL;
-	fp = fopen("./classInfor.txt", "wb");
+	fp = fopen(filename, "ab");
 	if (fp) {
 		fwrite(cJSON_Print(root), sizeof(char), strlen(cJSON_Print(root)), fp);
 		fclose(fp);

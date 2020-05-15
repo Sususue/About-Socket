@@ -43,7 +43,7 @@ void getReference(const std::string& recvStr, ClassInfor* ACourse);
 void initClassInfor(ClassInfor* ACourse);
 
 /*将课程信息写入文件*/
-void writeInfor(ClassInfor* ACourse);
+void writeInfor(ClassInfor* ACourse, char* filename);
 
 
 #endif
