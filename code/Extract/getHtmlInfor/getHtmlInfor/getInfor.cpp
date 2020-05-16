@@ -2,7 +2,7 @@
 #include "getInfor.h"
 #include <regex>
 #include <iostream>
-#include "cJSON.h"
+
 
 using namespace std;
 
@@ -116,6 +116,7 @@ void getStudentNum(const string& recvStr, ClassInfor* ACourse) {
 		int index1 = recvStr.find("\"", index);
 		//enrollCount : "......"中的内容是已参加人数
 		str = recvStr.substr(index, index1 - index);
+		str = regex_replace(str, regex("[ \f\r\t\n]"), "");//去掉空白符
 	}
 
 	if (str[0] != '\0') {
@@ -149,7 +150,10 @@ void getCourseDescribe(const string& recvStr, ClassInfor* ACourse) {
 		//不知道为啥，这个大学体育中间始终有一段匹配不上，在线正则表达式测试明明可以匹配
 		//换了一下匹配顺序好像又可以了
 		str = regex_replace(str, regex("[ \f\r\t\n]"), "");//去掉空白符
-		str = regex_replace(str, regex("</p>"), "\n");//换行
+		//str = regex_replace(str, regex("</p>"), "\n");//换行
+		//str = regex_replace(str, regex("<br/>"), "\n");//换行
+		str = regex_replace(str, regex("</p>"), "");//换行,删去
+		str = regex_replace(str, regex("<br/>"), "");//换行,删去
 		str = regex_replace(str, regex("<.*?>"), "");//去掉标签
 		str = regex_replace(str, regex("&nbsp;"), " ");//换成空格
 
@@ -157,13 +161,26 @@ void getCourseDescribe(const string& recvStr, ClassInfor* ACourse) {
 
 	if (str[0] != '\0') {
 		ACourse->classOverview = str;
-		ACourse->classOverview = regex_replace(ACourse->classOverview, regex("[\n]"), " ");//将换行换成空格
+		//ACourse->classOverview = regex_replace(ACourse->classOverview, regex("[\n]"), " ");//将换行换成空格
+		//ACourse->classOverview = regex_replace(ACourse->classOverview, regex("[\t]"), "");//将换行换成空格
 	}
 
 	FILE* fp = NULL;
-	fp = fopen("./信息验证/课程概述.txt", "wb");
+	fp = fopen("./信息验证/课程概述ACourse.txt", "wb");
+	if (fp) {
+		//fwrite(str.c_str(), sizeof(char), str.length(), fp);
+		fwrite(ACourse->classOverview.c_str(), sizeof(char), str.length(), fp);
+		fclose(fp);
+		fp = NULL;
+	}
+	else {
+		cout << "fail to open the file" << endl;
+	}
+	fp = NULL;
+	fp = fopen("./信息验证/课程概述str.txt", "wb");
 	if (fp) {
 		fwrite(str.c_str(), sizeof(char), str.length(), fp);
+		//fwrite(ACourse->classOverview.c_str(), sizeof(char), str.length(), fp);
 		fclose(fp);
 		fp = NULL;
 	}
@@ -198,7 +215,8 @@ void getCourseAim(const string& recvStr, ClassInfor* ACourse) {
 		str = recvStr.substr(index, index1 - index);
 
 		str = regex_replace(str, regex("[ \f\r\t\n]"), "");//去掉空白符
-		str = regex_replace(str, regex("</p>"), "\n");//换行
+		//str = regex_replace(str, regex("</p>"), "\n");//换行
+		str = regex_replace(str, regex("</p>"), "");//换行，换成空格
 		str = regex_replace(str, regex("<.*?>"), "");//去掉标签
 		str = regex_replace(str, regex("&nbsp;"), " ");//换成空格
 	}
@@ -206,13 +224,13 @@ void getCourseAim(const string& recvStr, ClassInfor* ACourse) {
 	if (str[0] != '\0') {
 		//strcpy(ACourse->aim, str.c_str());
 		ACourse->aim = str;
-		ACourse->aim = regex_replace(ACourse->aim, regex("[\n]"), " ");//将换行换成空格
+		//ACourse->aim = regex_replace(ACourse->aim, regex("[\n]"), " ");//将换行换成空格
 	}
 
 	FILE* fp = NULL;
 	fp = fopen("./信息验证/授课目标.txt", "wb");
 	if (fp) {
-		fwrite(str.c_str(), sizeof(char), str.length(), fp);
+		fwrite(ACourse->aim.c_str(), sizeof(char), str.length(), fp);
 		fclose(fp);
 		fp = NULL;
 	}
@@ -243,9 +261,11 @@ void getContent(const string& recvStr, ClassInfor* ACourse) {
 			str = regex_replace(str, regex("\\]"), "");//加双斜杠转义，否则报错
 			str = regex_replace(str, regex("[{]"), "");
 			str = regex_replace(str, regex("[}]"), "");
-			str = regex_replace(str, regex(";;;"), "\n");//换行
+			//str = regex_replace(str, regex(";;;"), "\n");//换行
+			str = regex_replace(str, regex(";;;"), "");//换行,换成空格
 			str = regex_replace(str, regex("[:;\"]"), "");
-			str = regex_replace(str, regex(","), "\n");//换行
+			//str = regex_replace(str, regex(","), "\n");//换行
+			str = regex_replace(str, regex(","), "");//换行,换成空格
 		}
 		else {//提取outLineDto:后面
 			int  index0 = recvStr.find("outLineDto:");
@@ -253,14 +273,17 @@ void getContent(const string& recvStr, ClassInfor* ACourse) {
 			index0 += strlen("outLine: \"");
 			str = recvStr.substr(index0, index - index0);
 			str = regex_replace(str, regex("[ \f\r\t\n]"), "");//去掉空白符
-			str = regex_replace(str, regex("</p>"), "\n");//换行
+			//str = regex_replace(str, regex("</p>"), "\n");//换行
+			str = regex_replace(str, regex("</p>"), " ");//换行,换成空格
 
 			/*要匹配反斜杠\\需要四个\\,前两个在编程语言中转成一个\,后两个在编程语言中准成一个\
 			在正则表达式中，前一个\转义后一个\
 			这就是在线测试可以匹配出来，但是代码里面始终不成功的原因。*/
-			str = regex_replace(str, regex("<\\\\/p>"), "\n");//换行
+			//str = regex_replace(str, regex("<\\\\/p>"), "\n");//换行
+			str = regex_replace(str, regex("<\\\\/p>"), "");//换行,换成空格
 
-			str = regex_replace(str, regex("<br/>"), "\n");//换行
+			//str = regex_replace(str, regex("<br/>"), "\n");//换行
+			str = regex_replace(str, regex("<br/>"), " ");//换行,换成空格
 			str = regex_replace(str, regex("<.*?>"), "");//去掉标签
 			str = regex_replace(str, regex("&nbsp;"), " ");//换成空格
 			str = regex_replace(str, regex("[:;\",]"), "");
@@ -271,13 +294,13 @@ void getContent(const string& recvStr, ClassInfor* ACourse) {
 	if (str[0] != '\0') {
 		//strcpy(ACourse->classOutline, str.c_str());
 		ACourse->classOutline = str;
-		ACourse->classOutline = regex_replace(ACourse->classOutline, regex("[\n]"), " ");//将换行换成空格
+		//ACourse->classOutline = regex_replace(ACourse->classOutline, regex("[\n]"), " ");//将换行换成空格
 	}
 
 	FILE* fp = NULL;
 	fp = fopen("./信息验证/课程大纲.txt", "wb");
 	if (fp) {
-		fwrite(str.c_str(), sizeof(char), str.length(), fp);
+		fwrite(ACourse->classOutline.c_str(), sizeof(char), str.length(), fp);
 		fclose(fp);
 		fp = NULL;
 	}
@@ -300,7 +323,8 @@ void getReference(const string& recvStr, ClassInfor* ACourse) {
 		str = recvStr.substr(index, index1 - index);
 
 		str = regex_replace(str, regex("[ \f\r\t\n]"), "");//去掉空白符
-		str = regex_replace(str, regex("</p>"), "\n");//换行
+		//str = regex_replace(str, regex("</p>"), "\n");//换行
+		str = regex_replace(str, regex("</p>"), "");//换行,换成空格
 		str = regex_replace(str, regex("<.*?>"), "");//去掉标签
 		str = regex_replace(str, regex("&nbsp;"), " ");//换成空格
 
@@ -308,13 +332,14 @@ void getReference(const string& recvStr, ClassInfor* ACourse) {
 
 	if (str[0] != '\0') {
 		ACourse->references = str;
-		ACourse->references = regex_replace(ACourse->references, regex("[\n]"), " ");//将换行换成空格
+		//ACourse->references = regex_replace(ACourse->references, regex("[\n]"), " ");//将换行换成空格
 	}
 
 	FILE* fp = NULL;
 	fp = fopen("./信息验证/参考资料.txt", "wb");
 	if (fp) {
-		fwrite(str.c_str(), sizeof(char), str.length(), fp);
+		//fwrite(str.c_str(), sizeof(char), str.length(), fp);
+		fwrite(ACourse->references.c_str(), sizeof(char), str.length(), fp);
 		fclose(fp);
 		fp = NULL;
 	}
@@ -344,7 +369,7 @@ void initClassInfor(ClassInfor* ACourse) {
 }
 
 /*将课程信息写入文件,借助cjson*/
-void writeInfor(ClassInfor* ACourse, char* filename) {
+void writeInfor1(ClassInfor* ACourse, char* filename) {
 	cJSON* root;
 	root = cJSON_CreateObject();//创建一个对象
 	cJSON_AddItemToObject(root, "schoolName", cJSON_CreateString(ACourse->schoolName.c_str()));
@@ -356,11 +381,14 @@ void writeInfor(ClassInfor* ACourse, char* filename) {
 	cJSON_AddItemToObject(root, "aim", cJSON_CreateString(ACourse->aim.c_str()));
 	cJSON_AddItemToObject(root, "references", cJSON_CreateString(ACourse->references.c_str()));
 
-	cout << cJSON_Print(root) << endl;
+	//cout << cJSON_Print(root) << endl;
 	FILE* fp = NULL;
 	fp = fopen(filename, "ab");
 	if (fp) {
-		fwrite(cJSON_Print(root), sizeof(char), strlen(cJSON_Print(root)), fp);
+		//fwrite(cJSON_Print(root), sizeof(char), strlen(cJSON_Print(root)), fp);
+		if (fprintf(fp, "%s", cJSON_Print(root)) != 0) {
+			cout << "write" << endl;
+		}
 		fclose(fp);
 		fp = NULL;
 	}
@@ -368,5 +396,38 @@ void writeInfor(ClassInfor* ACourse, char* filename) {
 		cout << "fail wo open the file" << endl;
 	}
 	cJSON_Delete(root);
+
+}
+
+/*将课程信息写入文件,借助cjson*/
+void writeInfor(ClassInfor* ACourse, cJSON* root) {
+	//cJSON* root;
+	//root = cJSON_CreateObject();//创建一个对象
+	cJSON_AddItemToObject(root, "schoolName", cJSON_CreateString(ACourse->schoolName.c_str()));
+	cJSON_AddItemToObject(root, "name", cJSON_CreateString(ACourse->name.c_str()));
+	cJSON_AddItemToObject(root, "duration", cJSON_CreateString(ACourse->duration.c_str()));
+	cJSON_AddItemToObject(root, "enrollCount", cJSON_CreateNumber(ACourse->enrollCount));
+	cJSON_AddItemToObject(root, "classOverview", cJSON_CreateString(ACourse->classOverview.c_str()));
+	cJSON_AddItemToObject(root, "classOutline", cJSON_CreateString(ACourse->classOutline.c_str()));
+	cJSON_AddItemToObject(root, "aim", cJSON_CreateString(ACourse->aim.c_str()));
+	cJSON_AddItemToObject(root, "references", cJSON_CreateString(ACourse->references.c_str()));
+
+	//cout << cJSON_Print(root) << endl;
+
+	//FILE* fp = NULL;
+	//fp = fopen(filename, "ab");
+	//if (fp) {
+	//	//fwrite(cJSON_Print(root), sizeof(char), strlen(cJSON_Print(root)), fp);
+	//	if (fprintf(fp, "%s", cJSON_Print(root)) != 0) {
+	//		cout << "write" << endl;
+	//	}
+	//	fclose(fp);
+	//	fp = NULL;
+	//}
+	//else {
+	//	cout << "fail wo open the file" << endl;
+	//}
+
+	//cJSON_Delete(root);
 
 }

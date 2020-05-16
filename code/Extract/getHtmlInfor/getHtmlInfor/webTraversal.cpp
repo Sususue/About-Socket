@@ -3,6 +3,7 @@
 #include"webTraversal.h"
 #include "getInfor.h"
 
+
 #include<iostream>
 
 using namespace std;
@@ -15,12 +16,15 @@ void GetCourseURL(string url) {
 	string cookie;
 	int schoolId = 9008;//先传固定参数吧，暂时就跑一个学校的所有网站
 	queue<string> courseUrl;
-	char filename[30] = "./classOfHUST.txt";
+	char filename[30] = "./data/classOfHUST.json";
 
 	FILE* fp = NULL;
-	fp = fopen(filename, "wb");
+	fp = fopen("CourseURL.txt", "wb");
 	fclose(fp);
 	fp = NULL;
+
+	cJSON* root;
+	root = cJSON_CreateArray();
 
 	while (true) {
 
@@ -39,15 +43,18 @@ void GetCourseURL(string url) {
 
 		else {
 			//先试试两页
-			if (sendRequestPOST(sock, host, resource, cookie, page, schoolId) == true && page <= 2) {
-			//if (sendRequestPOST(sock, host, resource, cookie, page, schoolId) == true && page <= 5) {
+			//if (sendRequestPOST(sock, host, resource, cookie, page, schoolId) == true && page <= 2) {
+			//暂时只读前四页，最后一页的tags都不为null,造成干扰
+			if (sendRequestPOST(sock, host, resource, cookie, page, schoolId) == true && page <= 4) {
 				string recvStr = recvRequest(sock, url);
 				if (recvStr.length() != 0) {
 					//好吧这才是真正获取url的函数
 					getURLFromFile(recvStr, courseUrl);
-					getClassInfor(courseUrl, filename);
+					getClassInfor(courseUrl, root);
 					downLoad(recvStr, "CourseURL.txt");
+					cout << "--------------------------" << endl;
 					cout << "page:" << page << endl;
+					cout << "--------------------------" << endl;
 					page++;
 					Sleep(200);
 				}
@@ -60,8 +67,27 @@ void GetCourseURL(string url) {
 			}
 
 		}
+
+		
+
+		/*fclose(fp);
+		fp = NULL;*/
 		closesocket(sock);
 	}
+	FILE* fp1 = NULL;
+	fp1 = fopen(filename, "wb");
+	if (fp1) {
+		//fwrite(cJSON_Print(root), sizeof(char), strlen(cJSON_Print(root)), fp);
+		if (fprintf(fp1, "%s", cJSON_Print(root)) != 0) {
+			cout << "write" << endl;
+		}
+		fclose(fp1);
+		fp1 = NULL;
+	}
+	else {
+		cout << "fail wo open the file" << endl;
+	}
+	cJSON_Delete(root);
 
 }
 /*从文件中获取课程URL*/
@@ -70,11 +96,12 @@ void getURLFromFile(const string& recvStr, queue<string>& courseUrl) {
 	int indexEnd = 0;
 	//cout << recvStr[index] << endl;
 	string str = "\0";
+	int temp = 0;
 
-	FILE* fp = NULL;
+	/*FILE* fp = NULL;
 	fp = fopen("./课程url.txt", "wb");
 	fclose(fp);
-	fp = NULL;
+	fp = NULL;*/
 
 	do {
 		index = recvStr.find("\"id\":", index);
@@ -86,16 +113,18 @@ void getURLFromFile(const string& recvStr, queue<string>& courseUrl) {
 			courseUrl.push(str);//指代课程的id进队
 
 
-			fp = fopen("./课程url.txt", "ab");//看看对不对
-			if (fp) {
-				fwrite(str.c_str(), sizeof(char), str.length(), fp);
-				fclose(fp);
-				fp = NULL;
-			}
-			else {
-				cout << "fail wo open the file" << endl;
-			}
+			//fp = fopen("./课程url.txt", "ab");//看看对不对
+			//if (fp) {
+			//	fwrite(str.c_str(), sizeof(char), str.length(), fp);
+			//	fclose(fp);
+			//	fp = NULL;
+			//}
+			//else {
+			//	cout << "fail wo open the file" << endl;
+			//}
+			
 			index = indexEnd;
+
 		}
 
 	} while (index != -1);
@@ -103,17 +132,37 @@ void getURLFromFile(const string& recvStr, queue<string>& courseUrl) {
 }
 
 /*获得课程信息*/
-void getClassInfor(queue<string>& courseUrl, char* filename) {
+void getClassInfor(queue<string>& courseUrl, cJSON* root) {
 	string url = "https://www.icourse163.org/course/HUST-";
 	//int qLen = courseUrl.size();
+	//cJSON* root;
+	//root = cJSON_CreateArray();
 	while (courseUrl.size() != 0) {
-		connnctCourse(url + courseUrl.front(), filename);
+		cJSON* rootData;
+		rootData = cJSON_CreateObject();//创建一个对象
+		connnctCourse(url + courseUrl.front(), rootData);
 		courseUrl.pop();
+		cJSON_AddItemToArray(root, rootData);
+
 	}
+	//FILE* fp = NULL;
+	//fp = fopen(filename, "ab");
+	//if (fp) {
+	//	//fwrite(cJSON_Print(root), sizeof(char), strlen(cJSON_Print(root)), fp);
+	//	if (fprintf(fp, "%s", cJSON_Print(root)) != 0) {
+	//		cout << "write" << endl;
+	//	}
+	//	fclose(fp);
+	//	fp = NULL;
+	//}
+	//else {
+	//	cout << "fail wo open the file" << endl;
+	//}
+	//cJSON_Delete(root);
 }
 
 /*连接课程网页*/
-void connnctCourse(string url, char* filename) {
+void connnctCourse(string url, cJSON* root) {
 	string host, resource;
 	SOCKET sock;
 
@@ -142,7 +191,7 @@ void connnctCourse(string url, char* filename) {
 				getContent(recvStr, &oneCourse);//课程大纲
 				getReference(recvStr, &oneCourse);//参考资料
 
-				writeInfor(&oneCourse, filename);//写入文件
+				writeInfor(&oneCourse, root);//写入文件
 			}
 
 

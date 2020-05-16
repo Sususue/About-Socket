@@ -3,6 +3,7 @@
 
 #include <string>
 #include <queue>//暂时先用STL的队列实现
+#include "cJSON.h"
 
 /*单独写一个获取具体课程url的函数采用广度遍历，好吧其实真实情况可能就一层*/
 void GetCourseURL(std::string url);
@@ -11,9 +12,9 @@ void GetCourseURL(std::string url);
 void getURLFromFile(const std::string& recvStr, std::queue<std::string>& courseUrl);
 
 /*获得课程信息*/
-void getClassInfor(std::queue<std::string>& courseUrl, char* filename);
+void getClassInfor(std::queue<std::string>& courseUrl, cJSON* root);
 
 /*连接课程网页*/
-void connnctCourse(std::string url, char* filename);
+void connnctCourse(std::string url, cJSON* root);
 
 #endif

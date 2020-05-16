@@ -3,6 +3,7 @@
 
 
 #include <string>
+#include "cJSON.h"
 
 typedef struct classInfor {
 	std::string schoolName;/*学校名称*/
@@ -43,7 +44,10 @@ void getReference(const std::string& recvStr, ClassInfor* ACourse);
 void initClassInfor(ClassInfor* ACourse);
 
 /*将课程信息写入文件*/
-void writeInfor(ClassInfor* ACourse, char* filename);
+void writeInfor1(ClassInfor* ACourse, char* filename);
+
+/*将课程信息写入文件*/
+void writeInfor(ClassInfor* ACourse, cJSON* root);
 
 
 #endif
